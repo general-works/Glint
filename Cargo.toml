@@ -1,0 +1,40 @@
+[package]
+name = "glint"
+version = "0.1.0"
+edition = "2021"
+description = "A modern Rust framework for building AI applications"
+license = "MIT"
+
+[[bin]]
+name = "chat"
+path = "example/simple_chat_agent.rs"
+
+[[bin]]
+name = "embeddings"
+path = "example/embeddings_example.rs"
+
+[[bin]]
+name = "vector_store"
+path = "example/vector_store_example.rs"
+
+[[bin]]
+name = "conditional_branch"
+path = "example/conditional_branch.rs"
+
+[dependencies]
+anyhow = "1.0"
+async-trait = "0.1"
+futures = "0.3"
+glob = "0.3"
+regex = "1.5"
+reqwest = { version = "0.11", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+tracing = "0.1"
+uuid = { version = "1.0", features = ["v4"] }
+petgraph = "0.6"
+
+[dev-dependencies]
+tokio-test = "0.4"
