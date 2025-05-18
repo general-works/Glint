@@ -1,6 +1,8 @@
 # Glint
 
-A Rust framework for building AI applications with LLMs, embeddings, and vector stores.
+Glint is a high-performance Rust framework for building stateful, graph-based AI systems. It enables developers to construct dynamic, multi-step workflows powered by LLMs, embeddings, and vector stores—executed through an async, checkpointable state machine. Inspired by modern AI orchestration tools, Glint provides a fast and memory-safe foundation for building agent runtimes, autonomous pipelines, and complex control flows.
+
+At its core, Glint leverages Rust’s zero-cost abstractions to deliver predictable performance, thread safety, and fine-grained control over state transitions. Its graph-based architecture makes it easy to model conditional logic, parallel branches, and persistent memory—all within a composable and extensible framework.
 
 ## Features
 
