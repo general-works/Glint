@@ -148,13 +148,13 @@ impl VectorStore for MemoryVectorStore {
         })?;
 
         // Create a set of IDs to delete
-        let id_set: std::collections::HashSet<&String> = ids.iter().collect();
+        let id_set: std::collections::HashSet<&str> = ids.iter().map(|s| s.as_str()).collect();
 
         // Filter out documents with matching IDs
         storage.retain(|doc_with_embedding| {
             if let Some(id) = doc_with_embedding.document.metadata.get("id") {
                 if let Some(id_str) = id.as_str() {
-                    return !id_set.contains(&id_str.to_string());
+                    return !id_set.contains(id_str);
                 }
             }
             true

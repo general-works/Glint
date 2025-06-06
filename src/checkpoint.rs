@@ -52,7 +52,7 @@ impl<S: StateValue> Checkpoint<S> {
 
     /// Add metadata to the checkpoint
     pub fn with_metadata(mut self, key: impl Into<String>, value: impl Serialize) -> Result<Self> {
-        let json_value = serde_json::to_value(value).map_err(|e| Error::Serialization(e))?;
+        let json_value = serde_json::to_value(value).map_err(Error::Serialization)?;
         self.metadata.metadata.insert(key.into(), json_value);
         Ok(self)
     }
@@ -187,7 +187,7 @@ impl<S: StateValue + Serialize + for<'de> Deserialize<'de>> FileCheckpointStore<
     async fn ensure_directory(&self) -> Result<()> {
         let path = Path::new(&self.directory);
         if !path.exists() {
-            fs::create_dir_all(path).await.map_err(|e| Error::Io(e))?;
+            fs::create_dir_all(path).await.map_err(Error::Io)?;
         }
         Ok(())
     }
@@ -206,13 +206,10 @@ impl<S: StateValue + Serialize + for<'de> Deserialize<'de>> CheckpointStore<S>
                 self.ensure_directory().await?;
 
                 // Serialize the checkpoint
-                let json =
-                    serde_json::to_string(&checkpoint).map_err(|e| Error::Serialization(e))?;
+                let json = serde_json::to_string(&checkpoint).map_err(Error::Serialization)?;
 
                 // Write the checkpoint to a file
-                fs::write(&file_path, json)
-                    .await
-                    .map_err(|e| Error::Io(e))?;
+                fs::write(&file_path, json).await.map_err(Error::Io)?;
 
                 // Update metadata file
                 let metadata_path = self.get_metadata_file_path();
@@ -222,9 +219,9 @@ impl<S: StateValue + Serialize + for<'de> Deserialize<'de>> CheckpointStore<S>
                 let mut all_metadata = if Path::new(&metadata_path).exists() {
                     let content = fs::read_to_string(&metadata_path)
                         .await
-                        .map_err(|e| Error::Io(e))?;
+                        .map_err(Error::Io)?;
                     serde_json::from_str::<HashMap<String, CheckpointMetadata>>(&content)
-                        .map_err(|e| Error::Serialization(e))?
+                        .map_err(Error::Serialization)?
                 } else {
                     HashMap::new()
                 };
@@ -232,11 +229,11 @@ impl<S: StateValue + Serialize + for<'de> Deserialize<'de>> CheckpointStore<S>
                 // Add new metadata and write back
                 all_metadata.insert(id.clone(), metadata);
                 let metadata_json =
-                    serde_json::to_string(&all_metadata).map_err(|e| Error::Serialization(e))?;
+                    serde_json::to_string(&all_metadata).map_err(Error::Serialization)?;
 
                 fs::write(&metadata_path, metadata_json)
                     .await
-                    .map_err(|e| Error::Io(e))?;
+                    .map_err(Error::Io)?;
 
                 Ok(id)
             })
@@ -255,13 +252,11 @@ impl<S: StateValue + Serialize + for<'de> Deserialize<'de>> CheckpointStore<S>
                 }
 
                 // Read the file
-                let content = fs::read_to_string(&file_path)
-                    .await
-                    .map_err(|e| Error::Io(e))?;
+                let content = fs::read_to_string(&file_path).await.map_err(Error::Io)?;
 
                 // Deserialize the checkpoint
                 let checkpoint: Checkpoint<S> =
-                    serde_json::from_str(&content).map_err(|e| Error::Serialization(e))?;
+                    serde_json::from_str(&content).map_err(Error::Serialization)?;
 
                 Ok(checkpoint)
             })
@@ -282,11 +277,11 @@ impl<S: StateValue + Serialize + for<'de> Deserialize<'de>> CheckpointStore<S>
                 // Read the file
                 let content = fs::read_to_string(&metadata_path)
                     .await
-                    .map_err(|e| Error::Io(e))?;
+                    .map_err(Error::Io)?;
 
                 // Deserialize the metadata
                 let all_metadata: HashMap<String, CheckpointMetadata> =
-                    serde_json::from_str(&content).map_err(|e| Error::Serialization(e))?;
+                    serde_json::from_str(&content).map_err(Error::Serialization)?;
 
                 Ok(all_metadata.values().cloned().collect())
             })
@@ -302,28 +297,26 @@ impl<S: StateValue + Serialize + for<'de> Deserialize<'de>> CheckpointStore<S>
             tokio::runtime::Handle::current().block_on(async {
                 // Delete the checkpoint file if it exists
                 if Path::new(&file_path).exists() {
-                    fs::remove_file(&file_path)
-                        .await
-                        .map_err(|e| Error::Io(e))?;
+                    fs::remove_file(&file_path).await.map_err(Error::Io)?;
                 }
 
                 // Update metadata file if it exists
                 if Path::new(&metadata_path).exists() {
                     let content = fs::read_to_string(&metadata_path)
                         .await
-                        .map_err(|e| Error::Io(e))?;
+                        .map_err(Error::Io)?;
 
                     let mut all_metadata: HashMap<String, CheckpointMetadata> =
-                        serde_json::from_str(&content).map_err(|e| Error::Serialization(e))?;
+                        serde_json::from_str(&content).map_err(Error::Serialization)?;
 
                     all_metadata.remove(id);
 
-                    let metadata_json = serde_json::to_string(&all_metadata)
-                        .map_err(|e| Error::Serialization(e))?;
+                    let metadata_json =
+                        serde_json::to_string(&all_metadata).map_err(Error::Serialization)?;
 
                     fs::write(&metadata_path, metadata_json)
                         .await
-                        .map_err(|e| Error::Io(e))?;
+                        .map_err(Error::Io)?;
                 }
 
                 Ok(())

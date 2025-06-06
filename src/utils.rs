@@ -8,6 +8,10 @@ use crate::graph::NodeProcessor;
 use crate::state::{State, StateValue};
 use crate::Result;
 
+/// Type alias for async processor functions to reduce complexity
+pub type AsyncProcessorFn<S> =
+    Arc<dyn Fn(State<S>) -> Pin<Box<dyn Future<Output = Result<State<S>>> + Send>> + Send + Sync>;
+
 /// Messages state trait for states that contain a messages field
 pub trait MessagesState {
     /// Get the messages from the state
@@ -43,9 +47,7 @@ where
 }
 
 /// A processor that wraps a function
-struct NodeProcessorFn<S>(
-    Arc<dyn Fn(State<S>) -> Pin<Box<dyn Future<Output = Result<State<S>>> + Send>> + Send + Sync>,
-)
+struct NodeProcessorFn<S>(AsyncProcessorFn<S>)
 where
     S: StateValue;
 

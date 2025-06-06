@@ -510,6 +510,12 @@ pub struct GraphBuilder<S: StateValue> {
     graph: Graph<S>,
 }
 
+impl<S: StateValue> Default for GraphBuilder<S> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<S: StateValue> GraphBuilder<S> {
     /// Create a new graph builder
     pub fn new() -> Self {

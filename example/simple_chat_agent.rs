@@ -65,7 +65,7 @@ async fn main() -> Result<()> {
 
     // Print the conversation
     for message in final_state.data.messages {
-        println!("{}: {}", format!("{:?}", message.role), message.content);
+        println!("{:?}: {}", message.role, message.content);
     }
 
     Ok(())
