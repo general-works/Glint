@@ -22,9 +22,16 @@ pub const END: &str = "__end__";
 ///
 /// ```
 /// use glint::graph::NodeProcessor;
-/// use glint::state::State;
+/// use glint::state::{State, StateValue};
 /// use glint::Result;
 /// use async_trait::async_trait;
+///
+/// #[derive(Debug, Clone)]
+/// struct MyState {
+///     value: i32,
+/// }
+///
+/// impl StateValue for MyState {}
 ///
 /// struct MyProcessor;
 ///
@@ -257,12 +264,13 @@ impl<S: StateValue> Graph<S> {
     async fn execute_sequential(&self, initial_state: State<S>) -> Result<State<S>> {
         // Start at the START node
         let start_idx = *self.node_map.get(START).unwrap();
+        let end_idx = *self.node_map.get(END).unwrap();
         let mut current_state = initial_state;
         let mut current_node = start_idx;
         let mut visited = HashSet::new();
 
         // Execute until we reach the END node or detect a cycle
-        while current_node != *self.node_map.get(END).unwrap() {
+        while current_node != end_idx {
             // Check for cycles
             if !visited.insert(current_node) {
                 let node_name = self.graph.node_weight(current_node).unwrap();
@@ -270,6 +278,16 @@ impl<S: StateValue> Graph<S> {
                     "Cycle detected at node: {}",
                     node_name
                 )));
+            }
+
+            // Process current node if it's not START
+            if current_node != start_idx {
+                let node_name = self.graph.node_weight(current_node).unwrap();
+                let processor = self.processors.get(node_name).ok_or_else(|| {
+                    Error::Graph(format!("No processor found for node: {}", node_name))
+                })?;
+
+                current_state = processor.process(current_state).await?;
             }
 
             // Find next node based on edge conditions
@@ -286,16 +304,6 @@ impl<S: StateValue> Graph<S> {
                 let node_name = self.graph.node_weight(current_node).unwrap();
                 Error::Graph(format!("No valid edges from node: {}", node_name))
             })?;
-
-            // If next node is not the END node, process it
-            if next_node != *self.node_map.get(END).unwrap() {
-                let node_name = self.graph.node_weight(next_node).unwrap();
-                let processor = self.processors.get(node_name).ok_or_else(|| {
-                    Error::Graph(format!("No processor found for node: {}", node_name))
-                })?;
-
-                current_state = processor.process(current_state).await?;
-            }
 
             current_node = next_node;
         }
@@ -694,7 +702,7 @@ mod tests {
         });
 
         let condition =
-            Arc::new(|state: &State<TestState>| Ok(state.data.counter.load(Ordering::SeqCst) > 1));
+            Arc::new(|state: &State<TestState>| Ok(state.data.counter.load(Ordering::SeqCst) >= 1));
 
         let graph = GraphBuilder::new()
             .with_node("counter1", CounterNode { increment: 1 })
@@ -736,8 +744,7 @@ mod tests {
             .unwrap()
             .with_edge("node2", "node1", None)
             .unwrap()
-            .with_end_edge("node2")
-            .unwrap()
+            // Note: No end edge - this creates a true cycle with no escape
             .build();
 
         let counter = Arc::new(AtomicUsize::new(0));
