@@ -1,0 +1,41 @@
+{
+    "nodes": {
+        "2f7d3c9a-1b42-4c83-9e5a-3a7f6d2c1b0e": {
+            "type": "trigger",
+            "name": "Trigger Node",
+            "description": "trigger for workflow"
+        },
+        "8e1f2a34-5c67-4b89-a1d2-3f4e5a6b7c8d": {
+            "type": "set",
+            "name": "User Basic Info",
+            "description": "Set user basic info",
+            "parameters": {
+                "user": "John Doe",
+                "email": "john.doe@example.com"
+            }
+        },
+        "f3a9c1be-7d24-4b8e-9a63-2d5b4c7e1f90": {
+            "type": "time",
+            "name": "Timestamp",
+            "description": "Set user contact info",
+            "parameters": {
+                "now": "{{now}}"
+            }
+        },
+        "a3d7f2c1-6e45-4b9a-8c2f-1d3e5f7a9b20": {
+            "type": "set",
+            "name": "Merge User Info",
+            "description": "Merge user information",
+            "parameters": {
+                "user": "=${8e1f2a34-5c67-4b89-a1d2-3f4e5a6b7c8d}.user",
+                "email": "=${8e1f2a34-5c67-4b89-a1d2-3f4e5a6b7c8d}.email",
+                "now": "=${f3a9c1be-7d24-4b8e-9a63-2d5b4c7e1f90}.now"
+            }
+        }
+    },
+    "connections": {
+        "2f7d3c9a-1b42-4c83-9e5a-3a7f6d2c1b0e": ["8e1f2a34-5c67-4b89-a1d2-3f4e5a6b7c8d", "f3a9c1be-7d24-4b8e-9a63-2d5b4c7e1f90"],
+        "8e1f2a34-5c67-4b89-a1d2-3f4e5a6b7c8d": ["a3d7f2c1-6e45-4b9a-8c2f-1d3e5f7a9b20"],
+        "f3a9c1be-7d24-4b8e-9a63-2d5b4c7e1f90": ["a3d7f2c1-6e45-4b9a-8c2f-1d3e5f7a9b20"]
+    }
+}
